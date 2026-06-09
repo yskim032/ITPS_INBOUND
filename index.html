@@ -4,8 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ITPS Inbound Converter</title>
+  <title>ITPS Inbound Converter (Serverless)</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     *,
     *::before,
@@ -39,7 +41,6 @@
       overflow-x: hidden;
     }
 
-    /* ── HEADER ── */
     header {
       background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
       border-bottom: 1px solid var(--border);
@@ -65,6 +66,12 @@
       box-shadow: var(--glow-green);
     }
 
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     header h1 {
       font-size: 20px;
       font-weight: 600;
@@ -72,12 +79,6 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin: 0;
-    }
-
-    .title-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
     }
 
     .copyright {
@@ -88,7 +89,6 @@
       opacity: 0.8;
     }
 
-    /* ── MAIN LAYOUT ── */
     main {
       display: flex;
       max-width: 1700px;
@@ -191,6 +191,7 @@
       justify-content: center;
       gap: 16px;
       position: relative;
+      transition: all .2s ease;
     }
 
     .drop-zone:hover {
@@ -313,6 +314,7 @@
       font-size: 14px;
       display: none;
       animation: slideIn .3s ease;
+      margin-bottom: 10px;
     }
 
     .toast.success {
@@ -382,6 +384,7 @@
     td {
       padding: 10px 12px;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     tr:hover td {
@@ -395,7 +398,6 @@
       border-top: 1px solid rgba(255, 215, 0, 0.2);
     }
 
-    /* Port Colors */
     .col-krpus {
       color: #ff4444 !important;
       font-weight: 800;
@@ -419,41 +421,6 @@
       border-radius: var(--radius);
       font-style: italic;
     }
-
-    .howto {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-top: 40px;
-    }
-
-    .steps {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .step {
-      display: flex;
-      gap: 12px;
-      font-size: 14px;
-      color: var(--muted);
-    }
-
-    .step-num {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #238636, #1f6feb);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
   </style>
 </head>
 
@@ -475,32 +442,56 @@
           <div class="drop-icon">📊</div>
           <span class="drop-label">최종파일</span>
           <div class="drop-filename" id="name-tsteam" style="display:none"></div>
-          <input type="file" id="file-tsteam" accept=".xlsx,.xls" />
+          <input type="file" id="file-tsteam" />
         </div>
         <div class="drop-zone itps" id="zone-itps">
           <button class="clear-btn" id="clear-itps" onclick="clearFile('itps', event)">✕ 제거</button>
           <div class="drop-icon">📋</div>
           <span class="drop-label">ITPS 파일</span>
           <div class="drop-filename" id="name-itps" style="display:none"></div>
-          <input type="file" id="file-itps" accept=".xlsx,.xls" />
+          <input type="file" id="file-itps" />
         </div>
       </div>
       <div class="action-bar">
         <button class="process-btn" id="process-btn" onclick="processFiles()" disabled>
-          <div class="spinner"></div><span class="btn-text">Merged 파일 생성</span>
+          <div class="spinner" id="spinner"></div><span class="btn-text" id="btn-text">Merged 파일 생성</span>
         </button>
         <div class="toast" id="toast"></div>
       </div>
-
     </div>
     <div class="neon-divider"></div>
     <div class="right-panel" id="summary-panel">
-      <div class="empty-state">파일을 업로드하고 생성 버튼을 누르면 요약 정보가 여기에 표시됩니다.</div>
+      <div class="empty-state">파일을 업로드하고 생성 버튼을 누르면 브라우저 내에서 즉시 처리됩니다.</div>
     </div>
   </main>
 
   <script>
     const files = { tsteam: null, itps: null };
+    const PORT_MAP = {
+      'AJMAN': 'AEAJM', 'ABU DHABI': 'AEAUH', 'DUBAI': 'AEDXB', 'AL - FUJAYRAH': 'AEFJR', 'JEBEL ALI': 'AEJEA',
+      'KHOR AL FAKKAN': 'AEKLF', 'PORT RASHID': 'AEPRA', 'UMM AL QAIWAIN': 'AEQIW', 'RAS AL KHAIMAH': 'AERKT',
+      'SHARJAH': 'AESHJ', 'YAS ISLAND': 'AEYAS', 'ANTIGUA': 'AGANU', 'ROAD BAY': 'AIRBY', 'DURRES': 'ALDRZ',
+      'SARANDE': 'ALSAR', 'LUANDA': 'AOLAD', 'LOBITO': 'AOLOB', 'NAMIBE': 'AOMSZ', 'BUENOS AIRES': 'ARBUE',
+      'CAMPANA': 'ARCMP', 'LA PLATA': 'ARLPG', 'PUERTO MADRYN': 'ARPMY', 'ROSARIO': 'ARROS', 'USHUAIA': 'ARUSH',
+      'ZARATE': 'ARZAE', 'PAGO PAGO': 'ASPPG', 'ABBOT POINT': 'AUABP', 'ADELAIDE': 'AUADL', 'ALBANY': 'AUALH',
+      'BRISBANE': 'AUBNE', 'MELBOURNE': 'AUMEL', 'SYDNEY': 'AUSYD', 'FREMANTLE': 'AUFRE', 'KRPUS': 'KRPUS',
+      'BUSAN': 'KRPUS', 'INCHEON': 'KRINC', 'KRINC': 'KRINC', 'KWANGYANG': 'KRKAN', 'KRKAN': 'KRKAN'
+    };
+
+    const TERMINAL_MAP = {
+      'PUSAN NEWPORT INTERNATIONAL TERMINAL-PNIT': 'PNIT',
+      'PUSAN NEWPORT COMPANY LIMITED': 'PNC',
+      'DONGWON GLOBAL TERMINAL (DGT)': 'DGT',
+      'BUSAN CONTAINER TERMINAL - BCT': 'BCT',
+      'HANJIN BUSAN NEW PORT CO., LTD': 'HJNC',
+      'HMM PSA NEW-PORT TERMINAL (HPNT)': 'HPNT'
+    };
+
+    const COLORS = {
+      'PNC': '#FFD1DC', 'PNIT': '#BFFCC6', 'BCT': '#D4F0F0',
+      'DGT': '#FFECB3', 'HJNC': '#E1BEE7', 'HPNT': '#C5CAE9'
+    };
+
     function setFile(type, file) {
       files[type] = file;
       const zone = document.getElementById(`zone-${type}`);
@@ -511,40 +502,199 @@
       checkReady();
     }
     function clearFile(type, e) {
-      e && e.stopPropagation();
+      if (e) e.stopPropagation();
       files[type] = null;
       document.getElementById(`zone-${type}`).classList.remove('loaded');
       document.getElementById(`name-${type}`).style.display = 'none';
-      document.getElementById(`file-${type}`).value = '';
       checkReady();
     }
     function checkReady() { document.getElementById('process-btn').disabled = !(files.tsteam && files.itps); }
+
     ['tsteam', 'itps'].forEach(type => {
       const zone = document.getElementById(`zone-${type}`);
-      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-      zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag-over'); const f = e.dataTransfer.files[0]; if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) setFile(type, f); });
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
+      zone.addEventListener('dragleave', () => zone.style.borderColor = '');
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.style.borderColor = '';
+        const f = e.dataTransfer.files[0];
+        if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) setFile(type, f);
+      });
     });
 
     async function processFiles() {
       const btn = document.getElementById('process-btn');
-      btn.classList.add('loading'); btn.disabled = true;
-      toast('success', '⏳ [데이터 처리중]');
-      const form = new FormData(); form.append('tsteam', files.tsteam); form.append('itps', files.itps);
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+      btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = '[데이터 처리중]';
+      toast('success', '⏳ 브라우저 내 데이터 처리 중...');
+
       try {
-        const res = await fetch('/process', { method: 'POST', body: form });
-        const result = await res.json();
-        if (result.error) throw new Error(result.error);
-        const byteChars = atob(result.file_data);
-        const byteNums = new Array(byteChars.length);
-        for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
-        const blob = new Blob([new Uint8Array(byteNums)], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = result.filename; a.click();
-        URL.revokeObjectURL(url);
-        renderSummary(result);
-        toast('success', `✅ "${result.filename}" 완료!`);
-      } catch (err) { toast('error', '❌ 오류: ' + err.message); } finally { btn.classList.remove('loading'); btn.disabled = false; }
+        const tsData = await readExcel(files.tsteam, 'TSTEAM');
+        const itData = await readExcel(files.itps, 'Data');
+
+        // Logic Porting
+        const merged = performProcessing(tsData, itData);
+        const { summary, soc, dg } = generateSummaries(merged);
+
+        renderSummary({ summary, soc, dg });
+        downloadExcel(merged, `Inbound_Merged_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+        toast('success', '✅ 처리 완료 및 다운로드 시작!');
+      } catch (err) {
+        console.error(err);
+        toast('error', '❌ 오류: ' + err.message);
+      } finally {
+        btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = 'Merged 파일 생성';
+      }
+    }
+
+    function readExcel(file, sheetName) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheet = workbook.Sheets[sheetName] || workbook.Sheets[workbook.SheetNames[0]];
+          resolve(XLSX.utils.sheet_to_json(sheet));
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function performProcessing(tsData, itData) {
+      const tsMap = {};
+      tsData.forEach(row => {
+        let bl = String(row['B/L NO'] || '');
+        if (bl.includes('<')) bl = bl.split('<')[0].trim();
+        if (bl) tsMap[bl] = row;
+      });
+
+      return itData.map(row => {
+        const bl = String(row['B/L No.'] || '');
+        const tsRow = tsMap[bl] || {};
+
+        let pod = String(row['Discharge Port'] || '');
+        if (PORT_MAP[pod]) pod = PORT_MAP[pod];
+
+        // VGM Handling
+        let weight = parseFloat(row['Package Weight'] || 0);
+        const unit = String(row['Weight Unit'] || '').toUpperCase();
+        if (unit === 'MT') weight *= 1000;
+        weight = Math.round(weight * 10) / 10;
+
+        // Terminal Name Mapping
+        let terminal = String(tsRow['Loading terminal'] || '');
+        Object.keys(TERMINAL_MAP).forEach(k => { if (terminal.includes(k)) terminal = TERMINAL_MAP[k]; });
+
+        // IMO/SOC Remark
+        const imo = String(row['IMO Class'] || '');
+        const socRem = String(row['SOC Remark'] || '');
+        let remark = '';
+        if (imo) remark += `IMO ${imo} `;
+        if (socRem.toUpperCase().includes('SOC')) remark += 'SOC';
+
+        return {
+          'No': row['No'] || '',
+          'Terminal': terminal,
+          'Container No.': row['Container No.'] || '',
+          'Type/Size': row['Type/Size'] || '',
+          'Full/Empty': row['Full/Empty'] || '',
+          'Package Weight': weight,
+          'Discharge Port': pod,
+          'B/L No.': bl,
+          'Remark': remark.trim(),
+          '_terminal': terminal // for sorting
+        };
+      }).sort((a, b) => {
+        if (!a._terminal && !b._terminal) return 0;
+        if (!a._terminal) return 1;
+        if (!b._terminal) return -1;
+        return a._terminal.localeCompare(b._terminal);
+      });
+    }
+
+    function generateSummaries(data) {
+      const counts = {};
+      const krPorts = ['KRPUS', 'KRKAN', 'KRINC'];
+      const soc = [], dg = [];
+
+      data.forEach(row => {
+        const tsSize = row['Type/Size'];
+        const pod = row['Discharge Port'];
+        const fe = String(row['Full/Empty']).toUpperCase();
+
+        if (!counts[tsSize]) counts[tsSize] = { KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, TOTAL: 0, 'TYPE/SIZE': tsSize };
+
+        if (fe !== 'E') {
+          if (krPorts.includes(pod)) counts[tsSize][pod]++;
+          else counts[tsSize]['TS']++;
+        }
+        counts[tsSize]['TOTAL']++;
+
+        if (row['Remark'].includes('SOC')) soc.push(row);
+        if (row['Remark'].includes('IMO')) dg.push(row);
+      });
+
+      const summary = Object.values(counts);
+      const totalsRow = { 'TYPE/SIZE': 'Total', KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, TOTAL: 0 };
+      summary.forEach(s => {
+        ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'TOTAL'].forEach(k => totalsRow[k] += s[k]);
+      });
+      summary.push(totalsRow);
+
+      return { summary, soc, dg };
+    }
+
+    function downloadExcel(data, filename) {
+      const ws = XLSX.utils.json_to_sheet(data);
+
+      // Styling (using xlsx-js-style)
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
+        const termCell = ws[XLSX.utils.encode_cell({ c: 1, r: R })]; // Terminal column
+        if (termCell && termCell.v && COLORS[termCell.v]) {
+          termCell.s = { fill: { fgColor: { rgb: COLORS[termCell.v].replace('#', '') } }, font: { bold: true } };
+        }
+        const weightCell = ws[XLSX.utils.encode_cell({ c: 5, r: R })]; // Weight
+        if (weightCell) weightCell.z = '0.0';
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Merged");
+      XlsxPopulate.saveAs(XLSX_STYLE.write(wb, { type: 'buffer' }), filename);
+    }
+
+    function downloadExcel(data, filename) {
+      // Create Sheet
+      const ws = XLSX.utils.json_to_sheet(data);
+      // Styling logic
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const terminalIdx = 1; // 'Terminal' column index
+        const cellRef = XLSX.utils.encode_cell({ r: r, c: terminalIdx });
+        const cell = ws[cellRef];
+        if (cell && cell.v && COLORS[cell.v]) {
+          cell.s = {
+            fill: { fgColor: { rgb: COLORS[cell.v].substring(1) } },
+            font: { bold: true }
+          };
+        }
+      }
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Merged");
+
+      // Use xlsx-js-style to write with styles
+      const wbout = XLSX_STYLE.write(wb, { bookType: 'xlsx', type: 'binary' });
+      function s2ab(s) {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+        return buf;
+      }
+      const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
     }
 
     function renderSummary(res) {
@@ -560,16 +710,13 @@
       const h2 = document.createElement('h2');
       h2.innerHTML = `${title}${count !== null ? ` <span class="header-count">(${count}건)</span>` : ''}`;
       card.appendChild(h2);
-      if (!data || data.length === 0) { const p = document.createElement('p'); p.className = 'empty-state'; p.textContent = '데이터가 없습니다.'; card.appendChild(p); return card; }
+      if (!data || data.length === 0) { card.innerHTML += '<p class="empty-state">데이터가 없습니다.</p>'; return card; }
       const wrap = document.createElement('div'); wrap.className = 'table-container';
       const table = document.createElement('table');
       const thead = document.createElement('thead'); const trHeader = document.createElement('tr');
 
-      // Enforce column order for Summary table specifically
-      let keys = Object.keys(data[0]);
-      if (isSummary) {
-        keys = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'TOTAL', 'TYPE/SIZE'];
-      }
+      let keys = Object.keys(data[0]).filter(k => !k.startsWith('_'));
+      if (isSummary) keys = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'TOTAL', 'TYPE/SIZE'];
 
       keys.forEach(key => {
         const th = document.createElement('th'); th.textContent = key;
@@ -600,7 +747,12 @@
       table.appendChild(tbody); wrap.appendChild(table); card.appendChild(wrap);
       return card;
     }
-    function toast(type, msg) { const el = document.getElementById('toast'); el.className = 'toast show ' + type; el.textContent = msg; }
+
+    function toast(type, msg) {
+      const el = document.getElementById('toast');
+      el.className = 'toast show ' + type; el.textContent = msg;
+      setTimeout(() => { if (el.textContent === msg) el.classList.remove('show'); }, 5000);
+    }
   </script>
 </body>
 
