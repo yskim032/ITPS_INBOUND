@@ -646,25 +646,6 @@
     }
 
     function downloadExcel(data, filename) {
-      const ws = XLSX.utils.json_to_sheet(data);
-
-      // Styling (using xlsx-js-style)
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let R = range.s.r + 1; R <= range.e.r; ++R) {
-        const termCell = ws[XLSX.utils.encode_cell({ c: 1, r: R })]; // Terminal column
-        if (termCell && termCell.v && COLORS[termCell.v]) {
-          termCell.s = { fill: { fgColor: { rgb: COLORS[termCell.v].replace('#', '') } }, font: { bold: true } };
-        }
-        const weightCell = ws[XLSX.utils.encode_cell({ c: 5, r: R })]; // Weight
-        if (weightCell) weightCell.z = '0.0';
-      }
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Merged");
-      XlsxPopulate.saveAs(XLSX_STYLE.write(wb, { type: 'buffer' }), filename);
-    }
-
-    function downloadExcel(data, filename) {
       // Create Sheet
       const ws = XLSX.utils.json_to_sheet(data);
       // Styling logic
@@ -679,6 +660,9 @@
             font: { bold: true }
           };
         }
+        const weightIdx = 5; // Package Weight
+        const weightRef = XLSX.utils.encode_cell({ r: r, c: weightIdx });
+        if (ws[weightRef]) ws[weightRef].z = '0.0';
       }
 
       const wb = XLSX.utils.book_new();
