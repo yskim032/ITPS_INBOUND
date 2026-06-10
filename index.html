@@ -5,9 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ITPS Inbound Converter (Serverless)</title>
+  <meta name="description"
+    content="ITPS Inbound 파일을 브라우저에서 변환하는 서버리스 툴. 최종파일과 ITPS 파일을 업로드하면 Merged Excel 파일이 즉시 생성됩니다." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- SheetJS (parse & write) -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     *,
     *::before,
@@ -85,8 +87,8 @@
       font-size: 11px;
       color: var(--muted);
       font-weight: 400;
-      letter-spacing: 0.02em;
-      opacity: 0.8;
+      letter-spacing: .02em;
+      opacity: .8;
     }
 
     main {
@@ -110,18 +112,18 @@
       background: linear-gradient(to bottom, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff, #ff0000);
       background-size: 100% 400%;
       animation: rainbow-flow 4s linear infinite;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+      box-shadow: 0 0 15px rgba(255, 255, 255, .4);
       margin: 0 40px;
       border-radius: 4px;
     }
 
     @keyframes rainbow-flow {
       0% {
-        background-position: 0% 0%;
+        background-position: 0% 0%
       }
 
       100% {
-        background-position: 0% 100%;
+        background-position: 0% 100%
       }
     }
 
@@ -135,7 +137,7 @@
       top: 100px;
     }
 
-    @media (max-width: 1200px) {
+    @media(max-width:1200px) {
       main {
         flex-direction: column;
       }
@@ -154,7 +156,7 @@
     }
 
     .section-title {
-      font-size: 26px;
+      font-size: 20px;
       text-transform: uppercase;
       letter-spacing: .08em;
       color: var(--muted);
@@ -192,6 +194,7 @@
       gap: 16px;
       position: relative;
       transition: all .2s ease;
+      cursor: pointer;
     }
 
     .drop-zone:hover {
@@ -206,6 +209,18 @@
     .drop-zone.itps:hover {
       border-color: var(--accent);
       box-shadow: var(--glow-green);
+    }
+
+    .drop-zone.loaded {
+      border-style: solid;
+    }
+
+    .drop-zone.tsteam.loaded {
+      border-color: var(--accent2);
+    }
+
+    .drop-zone.itps.loaded {
+      border-color: var(--accent);
     }
 
     .drop-icon {
@@ -227,11 +242,17 @@
       color: #3fb950;
     }
 
+    .drop-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
     .drop-filename {
       font-size: 13px;
       font-weight: 500;
       padding: 6px 12px;
       border-radius: 6px;
+      display: none;
     }
 
     .drop-zone.tsteam .drop-filename {
@@ -248,19 +269,76 @@
       position: absolute;
       top: 10px;
       right: 10px;
-      background: rgba(218, 54, 51, 0.25);
+      background: rgba(218, 54, 51, .25);
       color: #f85149;
-      border: 1px solid rgba(218, 54, 51, 0.4);
+      border: 1px solid rgba(218, 54, 51, .4);
       border-radius: 6px;
       padding: 4px 10px;
       font-size: 11px;
       cursor: pointer;
-      display: block !important;
       z-index: 20;
     }
 
     input[type="file"] {
       display: none;
+    }
+
+    /* ── TS Option Panel ── */
+    .ts-options {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .ts-options.visible {
+      display: block;
+    }
+
+    .ts-options h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 16px;
+    }
+
+    .ts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ts-row label {
+      font-size: 12px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .ts-row input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--text);
+      font-size: 13px;
+      transition: border-color .2s;
+    }
+
+    .ts-row input:focus {
+      outline: none;
+      border-color: var(--accent2);
+    }
+
+    .ts-row input::placeholder {
+      color: var(--muted);
+      opacity: .6;
     }
 
     .process-btn {
@@ -304,7 +382,7 @@
 
     @keyframes spin {
       to {
-        transform: rotate(360deg);
+        transform: rotate(360deg)
       }
     }
 
@@ -333,6 +411,18 @@
       display: block;
     }
 
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
     .summary-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -341,7 +431,7 @@
     }
 
     .summary-card h2 {
-      font-size: 20px;
+      font-size: 18px;
       color: #79c0ff;
       margin-bottom: 20px;
       display: flex;
@@ -356,7 +446,7 @@
 
     .table-container {
       overflow-x: auto;
-      max-height: 400px;
+      max-height: 420px;
       border: 1px solid var(--border);
       border-radius: 8px;
       background: #0d1117;
@@ -371,7 +461,7 @@
 
     th {
       background: var(--surface2);
-      padding: 12px;
+      padding: 10px 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
       position: sticky;
@@ -379,10 +469,11 @@
       color: var(--muted);
       font-weight: 600;
       text-transform: uppercase;
+      white-space: nowrap;
     }
 
     td {
-      padding: 10px 12px;
+      padding: 9px 12px;
       border-bottom: 1px solid var(--border);
       white-space: nowrap;
     }
@@ -394,8 +485,8 @@
     .total-row td {
       color: var(--yellow) !important;
       font-weight: 800 !important;
-      background: rgba(255, 215, 0, 0.08) !important;
-      border-top: 1px solid rgba(255, 215, 0, 0.2);
+      background: rgba(255, 215, 0, .08) !important;
+      border-top: 1px solid rgba(255, 215, 0, .2);
     }
 
     .col-krpus {
@@ -421,6 +512,43 @@
       border-radius: var(--radius);
       font-style: italic;
     }
+
+    /* terminal color badges */
+    .t-PNC {
+      background: #ADD8E6;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .t-PNIT {
+      background: #FFFFE0;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .t-DGT {
+      background: #E0FFE0;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .t-BCT {
+      background: #FFE4E1;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .t-HJNC {
+      background: #F0E68C;
+      color: #000;
+      font-weight: 700;
+    }
+
+    .t-HPNT {
+      background: #E6E6FA;
+      color: #000;
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -428,55 +556,122 @@
   <header>
     <div class="logo-icon">📦</div>
     <div class="title-wrap">
-      <h1>ITPS Inbound Converter <span style="font-size: 0.6em; vertical-align: middle; opacity: 0.7;">(Serverless
-          v1.1)</span></h1>
-      <p class="copyright">The End - YS KIM holds the copyright @ 2026</p>
+      <h1>ITPS Inbound Converter <span style="font-size:0.6em;vertical-align:middle;opacity:.7;">(Serverless
+          v2.0)</span></h1>
+      <p class="copyright">The End – YS KIM holds the copyright @ 2026</p>
     </div>
   </header>
 
   <main>
     <div class="left-panel">
       <p class="section-title">파일 업로드 (Drag &amp; Drop)</p>
+
       <div class="drop-grid">
-        <div class="drop-zone tsteam" id="zone-tsteam">
-          <button class="clear-btn" id="clear-tsteam" onclick="clearFile('tsteam', event)">✕ 제거</button>
+        <!-- 최종파일 (TSTEAM) -->
+        <div class="drop-zone tsteam" id="zone-tsteam" onclick="document.getElementById('file-tsteam').click()"
+          ondragover="onDragOver(event,'tsteam')" ondragleave="onDragLeave('tsteam')" ondrop="onDrop(event,'tsteam')">
+          <button class="clear-btn" id="clear-tsteam" onclick="clearFile('tsteam',event)">✕ 제거</button>
           <div class="drop-icon">📊</div>
           <span class="drop-label">최종파일</span>
-          <div class="drop-filename" id="name-tsteam" style="display:none"></div>
-          <input type="file" id="file-tsteam" />
+          <span class="drop-hint">Cntr No. / Container Number 컬럼</span>
+          <div class="drop-filename" id="name-tsteam"></div>
+          <input type="file" id="file-tsteam" accept=".xlsx,.xls" onchange="onFileInput('tsteam',this)" />
         </div>
-        <div class="drop-zone itps" id="zone-itps">
-          <button class="clear-btn" id="clear-itps" onclick="clearFile('itps', event)">✕ 제거</button>
+
+        <!-- ITPS 파일 -->
+        <div class="drop-zone itps" id="zone-itps" onclick="document.getElementById('file-itps').click()"
+          ondragover="onDragOver(event,'itps')" ondragleave="onDragLeave('itps')" ondrop="onDrop(event,'itps')">
+          <button class="clear-btn" id="clear-itps" onclick="clearFile('itps',event)">✕ 제거</button>
           <div class="drop-icon">📋</div>
           <span class="drop-label">ITPS 파일</span>
-          <div class="drop-filename" id="name-itps" style="display:none"></div>
-          <input type="file" id="file-itps" />
+          <span class="drop-hint">Equipment Number 컬럼</span>
+          <div class="drop-filename" id="name-itps"></div>
+          <input type="file" id="file-itps" accept=".xlsx,.xls" onchange="onFileInput('itps',this)" />
         </div>
       </div>
+
+      <!-- TS 선박 옵션 (TSTEAM 파일 로드 후 표시) -->
+      <div class="ts-options" id="ts-options">
+        <h3>🚢 TS 선박 정보 (선택사항)</h3>
+        <div class="ts-row">
+          <div>
+            <label for="pnit-vessel">PNIT 선박/항차</label>
+            <input type="text" id="pnit-vessel" placeholder="예: EVER GIVEN 123E" />
+          </div>
+          <div>
+            <label for="pnit-pod">PNIT Next POD</label>
+            <input type="text" id="pnit-pod" placeholder="예: SGSIN" />
+          </div>
+        </div>
+        <div class="ts-row">
+          <div>
+            <label for="pnc-vessel">PNC 선박/항차</label>
+            <input type="text" id="pnc-vessel" placeholder="예: MSC OSCAR 456W" />
+          </div>
+          <div>
+            <label for="pnc-pod">PNC Next POD</label>
+            <input type="text" id="pnc-pod" placeholder="예: SGSIN" />
+          </div>
+        </div>
+      </div>
+
       <div class="action-bar">
         <button class="process-btn" id="process-btn" onclick="processFiles()" disabled>
-          <div class="spinner" id="spinner"></div><span class="btn-text" id="btn-text">Merged 파일 생성</span>
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">Merged 파일 생성</span>
         </button>
         <div class="toast" id="toast"></div>
       </div>
     </div>
+
     <div class="neon-divider"></div>
+
     <div class="right-panel" id="summary-panel">
       <div class="empty-state">파일을 업로드하고 생성 버튼을 누르면 브라우저 내에서 즉시 처리됩니다.</div>
     </div>
   </main>
 
   <script>
-    const files = { tsteam: null, itps: null };
-    const PORT_MAP = {
+    // ═══════════════════════════════════════════════════════════════════
+    // 0. 상수 정의
+    // ═══════════════════════════════════════════════════════════════════
+    const PORT_CODE_MAP = {
       'AJMAN': 'AEAJM', 'ABU DHABI': 'AEAUH', 'DUBAI': 'AEDXB', 'AL - FUJAYRAH': 'AEFJR', 'JEBEL ALI': 'AEJEA',
       'KHOR AL FAKKAN': 'AEKLF', 'PORT RASHID': 'AEPRA', 'UMM AL QAIWAIN': 'AEQIW', 'RAS AL KHAIMAH': 'AERKT',
       'SHARJAH': 'AESHJ', 'YAS ISLAND': 'AEYAS', 'ANTIGUA': 'AGANU', 'ROAD BAY': 'AIRBY', 'DURRES': 'ALDRZ',
       'SARANDE': 'ALSAR', 'LUANDA': 'AOLAD', 'LOBITO': 'AOLOB', 'NAMIBE': 'AOMSZ', 'BUENOS AIRES': 'ARBUE',
       'CAMPANA': 'ARCMP', 'LA PLATA': 'ARLPG', 'PUERTO MADRYN': 'ARPMY', 'ROSARIO': 'ARROS', 'USHUAIA': 'ARUSH',
       'ZARATE': 'ARZAE', 'PAGO PAGO': 'ASPPG', 'ABBOT POINT': 'AUABP', 'ADELAIDE': 'AUADL', 'ALBANY': 'AUALH',
-      'BRISBANE': 'AUBNE', 'MELBOURNE': 'AUMEL', 'SYDNEY': 'AUSYD', 'FREMANTLE': 'AUFRE', 'KRPUS': 'KRPUS',
-      'BUSAN': 'KRPUS', 'INCHEON': 'KRINC', 'KRINC': 'KRINC', 'KWANGYANG': 'KRKAN', 'KRKAN': 'KRKAN'
+      'BELL BAY': 'AUBEL', 'BRISBANE': 'AUBNE', 'BOOBY ISLAND': 'AUBOO', 'CAIRNS': 'AUCNS', 'DARWIN': 'AUDRW',
+      'ESPERANCE': 'AUEPR', 'FREMANTLE': 'AUFRE', 'GLADSTONE': 'AUGLT', 'HOBART': 'AUHBA', 'HAY POINT': 'AUHPT',
+      'MELBOURNE': 'AUMEL', 'NEWCASTLE': 'GBNCS', 'PORT HEDLAND': 'AUPHE', 'PORT KEMBLA': 'AUPKL',
+      'SYDNEY': 'CASYD', 'ANTWERP': 'BEANR', 'GENT (GHENT)': 'BEGNE', 'ZEEBRUGGE': 'BEZEE',
+      'BAHRAIN': 'BHKBS', 'CHATTOGRAM': 'BDCGP', 'MONGLA': 'BDMGL',
+      'ROTTERDAM': 'NLRTM', 'HAMBURG': 'DEHAM', 'BREMERHAVEN': 'DEBRV', 'BREMEN': 'DEBRE',
+      'SINGAPORE': 'SGSIN', 'HONG KONG': 'HKHKG',
+      'SHANGHAI': 'CNSHA', 'NINGBO': 'CNNGB', 'QINGDAO': 'CNTAO', 'TIANJINXINGANG': 'CNTXG',
+      'GUANGZHOU': 'CNCAN', 'SHENZHEN': 'CNSZX', 'XIAMEN': 'CNXMN', 'DALIAN': 'CNDLC',
+      'TAIPEI': 'TWTPE', 'KAOHSIUNG': 'TWKHH', 'KEELUNG': 'TWKEL', 'TAICHUNG': 'TWTXG',
+      'TOKYO': 'JPTYO', 'YOKOHAMA': 'JPYOK', 'KOBE': 'JPUKB', 'OSAKA': 'JPOSA', 'NAGOYA': 'JPNGO',
+      'HAKATA, FUKUOKA': 'JPHKT', 'MOJI/KITAKYUSHU': 'JPMOJ',
+      'BANGKOK': 'THBKK', 'LAEM CHABANG': 'THLCH',
+      'PORT KLANG (PELABUHAN KLANG)': 'MYPKG', 'TANJUNG PELEPAS': 'MYTPP', 'PENANG': 'MYPEN',
+      'JAKARTA, JAVA': 'IDJKT', 'SURABAYA': 'IDSUB', 'BELAWAN, SUMATRA': 'IDBLW',
+      'MANILA SOUTH HARBOUR': 'PHMNS', 'MANILA NORTH HARBOUR': 'PHMNN',
+      'COLOMBO': 'LKCMB', 'NHAVA SHEVA': 'INNSA', 'MUMBAI': 'INBOM', 'CHENNAI': 'INMAA',
+      'JEDDAH': 'SAJED', 'AD DAMMAM': 'SADMM', 'DOHA': 'QADOH',
+      'DURBAN': 'ZADUR', 'CAPE TOWN': 'ZACPT', 'MOMBASA': 'KEMBA',
+      'PIRAEUS': 'GRPIR', 'FELIXSTOWE': 'GBFXT', 'LE HAVRE': 'FRLEH', 'BARCELONA': 'ESBCN',
+      'VALENCIA': 'ESVLC', 'ALGECIRAS': 'ESALG', 'GENOA': 'ITGOA', 'GIOIA TAURO': 'ITGIT',
+      'ANTOFAGASTA': 'CLANF', 'CALLAO': 'PECLL', 'SANTOS': 'BRSSZ', 'BUENOS AIRES': 'ARBUE',
+      'LOS ANGELES': 'USLAX', 'LONG BEACH': 'USLGB', 'NEW YORK': 'USNYC', 'SAVANNAH': 'USSAV',
+      'HOUSTON': 'USHOU', 'CHARLESTON': 'USCHS', 'SEATTLE': 'USSEA',
+      'VANCOUVER': 'CAVAN', 'MONTREAL': 'CAMTR', 'HALIFAX': 'CAHAL',
+      // 부산/한국
+      'BUSAN': 'KRPUS', 'KRPUS': 'KRPUS',
+      'INCHEON': 'KRINC', 'KRINC': 'KRINC',
+      'GWANGYANG': 'KRKAN', 'KWANGYANG': 'KRKAN', 'KRKAN': 'KRKAN',
+      'ULSAN': 'KRUSN', 'POHANG': 'KRKPO',
     };
 
     const TERMINAL_MAP = {
@@ -485,13 +680,32 @@
       'DONGWON GLOBAL TERMINAL (DGT)': 'DGT',
       'BUSAN CONTAINER TERMINAL - BCT': 'BCT',
       'HANJIN BUSAN NEW PORT CO., LTD': 'HJNC',
-      'HMM PSA NEW-PORT TERMINAL (HPNT)': 'HPNT'
+      'HMM PSA NEW-PORT TERMINAL (HPNT)': 'HPNT',
+      'OLD PORT FEEDER TERMINAL': 'OLD PORT FEEDER TERMINAL',
     };
 
-    const COLORS = {
-      'PNC': '#FFD1DC', 'PNIT': '#BFFCC6', 'BCT': '#D4F0F0',
-      'DGT': '#FFECB3', 'HJNC': '#E1BEE7', 'HPNT': '#C5CAE9'
+    const TERMINAL_COLORS = {
+      'PNC': 'ADD8E6', 'PNIT': 'FFFFE0', 'DGT': 'E0FFE0',
+      'BCT': 'FFE4E1', 'HJNC': 'F0E68C', 'HPNT': 'E6E6FA',
     };
+
+    const KR_PORTS = ['KRPUS', 'KRINC', 'KRKAN'];
+
+    const OUTPUT_COLUMNS = [
+      'Equipment Number', 'BL No.<Booking No.>',
+      'Discharge Vessel/Voyage', 'Discharging Terminal',
+      'Loaded Vessel/Voyage', 'Loading Terminal',
+      'Origin Load Port', 'Stow Code', 'Discharge Port',
+      'Type/Size', 'Full/Empty', 'Weight', 'VGM Weight', 'VGM Unit',
+      'Reefer or IMO', 'Reefer Temp.',
+      'Dangerous Cargo', 'IMO Class', 'UN Number',
+      'Vet. Control', 'Remark',
+    ];
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 1. 파일 상태 관리
+    // ═══════════════════════════════════════════════════════════════════
+    const files = { tsteam: null, itps: null };
 
     function setFile(type, file) {
       files[type] = file;
@@ -500,243 +714,512 @@
       zone.classList.add('loaded');
       nameEl.textContent = '✓ ' + file.name;
       nameEl.style.display = 'block';
+      if (type === 'tsteam') document.getElementById('ts-options').classList.add('visible');
       checkReady();
     }
+
     function clearFile(type, e) {
       if (e) e.stopPropagation();
       files[type] = null;
       document.getElementById(`zone-${type}`).classList.remove('loaded');
-      document.getElementById(`name-${type}`).style.display = 'none';
+      const nameEl = document.getElementById(`name-${type}`);
+      nameEl.textContent = '';
+      nameEl.style.display = 'none';
+      if (type === 'tsteam') document.getElementById('ts-options').classList.remove('visible');
       checkReady();
     }
-    function checkReady() { document.getElementById('process-btn').disabled = !(files.tsteam && files.itps); }
 
-    ['tsteam', 'itps'].forEach(type => {
-      const zone = document.getElementById(`zone-${type}`);
-      zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
-      zone.addEventListener('dragleave', () => zone.style.borderColor = '');
-      zone.addEventListener('drop', e => {
-        e.preventDefault(); zone.style.borderColor = '';
-        const f = e.dataTransfer.files[0];
-        if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) setFile(type, f);
-      });
-    });
-
-    async function processFiles() {
-      const btn = document.getElementById('process-btn');
-      const spinner = document.getElementById('spinner');
-      const btnText = document.getElementById('btn-text');
-      btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = '[데이터 처리중]';
-      toast('success', '⏳ 브라우저 내 데이터 처리 중...');
-
-      try {
-        const tsData = await readExcel(files.tsteam, 'TSTEAM');
-        const itData = await readExcel(files.itps, 'Data');
-
-        // Logic Porting
-        const merged = performProcessing(tsData, itData);
-        const { summary, soc, dg } = generateSummaries(merged);
-
-        renderSummary({ summary, soc, dg });
-        downloadExcel(merged, `Inbound_Merged_${new Date().toISOString().slice(0, 10)}.xlsx`);
-
-        toast('success', '✅ 처리 완료 및 다운로드 시작!');
-      } catch (err) {
-        console.error(err);
-        toast('error', '❌ 오류: ' + err.message);
-      } finally {
-        btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = 'Merged 파일 생성';
-      }
+    function checkReady() {
+      document.getElementById('process-btn').disabled = !(files.tsteam && files.itps);
     }
 
-    function readExcel(file, sheetName) {
-      return new Promise((resolve, reject) => {
+    // ── drag & drop helpers ──
+    function onDragOver(e, type) { e.preventDefault(); document.getElementById(`zone-${type}`).style.borderColor = type === 'tsteam' ? '#1f6feb' : '#238636'; }
+    function onDragLeave(type) { document.getElementById(`zone-${type}`).style.borderColor = ''; }
+    function onDrop(e, type) {
+      e.preventDefault();
+      document.getElementById(`zone-${type}`).style.borderColor = '';
+      const f = e.dataTransfer.files[0];
+      if (f && (f.name.endsWith('.xlsx') || f.name.endsWith('.xls'))) setFile(type, f);
+      else showToast('error', '❌ Excel 파일(.xlsx/.xls)만 업로드 가능합니다.');
+    }
+    function onFileInput(type, input) {
+      if (input.files[0]) setFile(type, input.files[0]);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 2. Excel 읽기
+    // ═══════════════════════════════════════════════════════════════════
+    function readExcel(file) {
+      return new Promise((res, rej) => {
         const reader = new FileReader();
         reader.onload = e => {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheet = workbook.Sheets[sheetName] || workbook.Sheets[workbook.SheetNames[0]];
-          resolve(XLSX.utils.sheet_to_json(sheet));
+          try {
+            const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+            res(wb);
+          } catch (err) { rej(err); }
         };
+        reader.onerror = rej;
         reader.readAsArrayBuffer(file);
       });
     }
 
-    function performProcessing(tsData, itData) {
-      const tsMap = {};
-      tsData.forEach(row => {
-        let bl = String(row['B/L NO'] || '');
-        if (bl.includes('<')) bl = bl.split('<')[0].trim();
-        if (bl) tsMap[bl] = row;
-      });
-
-      return itData.map(row => {
-        const bl = String(row['B/L No.'] || '');
-        const tsRow = tsMap[bl] || {};
-
-        let pod = String(row['Discharge Port'] || '');
-        if (PORT_MAP[pod]) pod = PORT_MAP[pod];
-
-        // VGM Handling
-        let weight = parseFloat(row['Package Weight'] || 0);
-        const unit = String(row['Weight Unit'] || '').toUpperCase();
-        if (unit === 'MT') weight *= 1000;
-        weight = Math.round(weight * 10) / 10;
-
-        // Terminal Name Mapping
-        let terminal = String(tsRow['Loading terminal'] || '');
-        Object.keys(TERMINAL_MAP).forEach(k => { if (terminal.includes(k)) terminal = TERMINAL_MAP[k]; });
-
-        // IMO/SOC Remark
-        const imo = String(row['IMO Class'] || '');
-        const socRem = String(row['SOC Remark'] || '');
-        let remark = '';
-        if (imo) remark += `IMO ${imo} `;
-        if (socRem.toUpperCase().includes('SOC')) remark += 'SOC';
-
-        return {
-          'No': row['No'] || '',
-          'Terminal': terminal,
-          'Container No.': row['Container No.'] || '',
-          'Type/Size': row['Type/Size'] || '',
-          'Full/Empty': row['Full/Empty'] || '',
-          'Package Weight': weight,
-          'Discharge Port': pod,
-          'B/L No.': bl,
-          'Remark': remark.trim(),
-          '_terminal': terminal // for sorting
-        };
-      }).sort((a, b) => {
-        if (!a._terminal && !b._terminal) return 0;
-        if (!a._terminal) return 1;
-        if (!b._terminal) return -1;
-        return a._terminal.localeCompare(b._terminal);
-      });
+    function sheetToJson(sheet) {
+      return XLSX.utils.sheet_to_json(sheet, { defval: '' });
     }
 
-    function generateSummaries(data) {
-      const counts = {};
-      const krPorts = ['KRPUS', 'KRKAN', 'KRINC'];
-      const soc = [], dg = [];
+    // ═══════════════════════════════════════════════════════════════════
+    // 3. 유틸리티
+    // ═══════════════════════════════════════════════════════════════════
+    function convertToPortCode(portName) {
+      if (!portName) return '';
+      const key = String(portName).trim().toUpperCase();
+      return PORT_CODE_MAP[key] || '';
+    }
 
-      data.forEach(row => {
-        const tsSize = row['Type/Size'];
-        const pod = row['Discharge Port'];
-        const fe = String(row['Full/Empty']).toUpperCase();
+    function mapTerminal(name) {
+      if (!name) return '';
+      const s = String(name).trim();
+      for (const [full, abbr] of Object.entries(TERMINAL_MAP)) {
+        if (s.includes(full)) return abbr;
+      }
+      return s;
+    }
 
-        if (!counts[tsSize]) counts[tsSize] = { KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, TOTAL: 0, 'TYPE/SIZE': tsSize };
+    function normStr(v) { return (v === null || v === undefined) ? '' : String(v).trim(); }
 
-        if (fe !== 'E') {
-          if (krPorts.includes(pod)) counts[tsSize][pod]++;
-          else counts[tsSize]['TS']++;
+    // BL No 통일: 'BL No.<Booking No.>', 'BL No.', 'BL.<Booking No.>', 'BL.No.<Booking No.>'
+    function extractBL(row) {
+      const candidates = ['BL No.<Booking No.>', 'BL No.', 'BL.<Booking No.>', 'BL.No.<Booking No.>'];
+      for (const c of candidates) {
+        if (row[c] !== undefined && row[c] !== '') {
+          let v = String(row[c]);
+          if (v.includes('<')) v = v.split('<')[0].trim();
+          return v;
         }
-        counts[tsSize]['TOTAL']++;
+      }
+      return '';
+    }
 
-        if (row['Remark'].includes('SOC')) soc.push(row);
-        if (row['Remark'].includes('IMO')) dg.push(row);
+    // ═══════════════════════════════════════════════════════════════════
+    // 4. 메인 처리 로직 (app.py 1:1 포팅)
+    // ═══════════════════════════════════════════════════════════════════
+    function performProcessing(tsteamWb, itpsData, opts) {
+      const { pnitVessel, pnitPod, pncVessel, pncPod } = opts;
+
+      // ── Step 3: TSTEAM 파싱 → ts_map (Cntr No. 기준) ─────────────────
+      const tsMap = {}; // { cntrNo: { POR, POL, POD, FPOD, REMARK } }
+      for (const sheetName of tsteamWb.SheetNames) {
+        const rows = sheetToJson(tsteamWb.Sheets[sheetName]);
+        if (rows.length === 0) continue;
+        const hasCntr = 'Cntr No.' in rows[0] || 'Container Number' in rows[0];
+        if (!hasCntr) continue;
+
+        rows.forEach(r => {
+          const cntrKey = 'Cntr No.' in r ? 'Cntr No.' : 'Container Number';
+          const cntr = normStr(r[cntrKey]);
+          if (!cntr) return;
+          tsMap[cntr] = {
+            POR: normStr(r['POR'] || r['POL'] || ''),
+            POL: normStr(r['POL'] || ''),
+            POD: normStr(r['POD'] || ''),
+            FPOD: normStr(r['FPOD'] || r['FND'] || ''),
+            REMARK: normStr(r['REMARK'] || ''),
+          };
+        });
+      }
+
+      // ── Step 4: ITPS 데이터 매핑 ────────────────────────────────────
+      let data = itpsData.map(row => {
+        const r = Object.assign({}, row);
+        const cntr = normStr(r['Equipment Number']);
+        const ts = tsMap[cntr];
+
+        if (ts) {
+          r['Origin Load Port'] = ts.POR;
+          r['Next POD'] = ts.POD;
+          // Discharge Port 변환
+          let dp = normStr(r['Discharge Port']);
+          if (dp) {
+            let parts = dp.split(',');
+            let portName = (parts.length > 1 ? parts.slice(0, -1).join(',') : parts[0]).trim();
+            const code = convertToPortCode(portName);
+            if (code) r['Discharge Port'] = code;
+          }
+          r['Active'] = ts.REMARK;
+        }
+        return r;
+      });
+
+      // ── Step 5: VGM Weight 처리 ─────────────────────────────────────
+      data = data.map(r => {
+        if (r['Weight'] !== undefined && r['Weight'] !== '') {
+          const w = parseFloat(r['Weight']);
+          r['Weight'] = isNaN(w) ? 0 : Math.round(w);
+        }
+
+        let vgm = parseFloat(r['VGM Weight']);
+        if (isNaN(vgm) || r['VGM Weight'] === '') {
+          vgm = parseFloat(r['Weight']) || 0;
+        } else {
+          vgm = Math.round(vgm);
+        }
+
+        let vgmUnit = normStr(r['VGM Unit']) || 'KGS';
+        if (vgmUnit.toUpperCase() === 'LBS') {
+          vgm = Math.round(vgm * 0.453592);
+          vgmUnit = 'KGS (from LBS)';
+        }
+        r['VGM Weight'] = vgm;
+        r['VGM Unit'] = vgmUnit;
+        return r;
+      });
+
+      // ── Step 6: Discharge Port – TS 분기 ────────────────────────────
+      data = data.map(r => {
+        const dp = normStr(r['Discharge Port']);
+        if (dp && !dp.startsWith('KR')) {
+          if (pnitVessel) {
+            r['Loading Terminal'] = 'PNIT';
+            r['Loaded Vessel/Voyage'] = pnitVessel;
+            r['Next POD'] = pnitPod;
+            r['Discharge Port'] = pnitPod;
+          } else if (pncVessel) {
+            r['Loading Terminal'] = 'PNC';
+            r['Loaded Vessel/Voyage'] = pncVessel;
+            r['Next POD'] = pncPod;
+            r['Discharge Port'] = pncPod;
+          }
+        }
+        return r;
+      });
+
+      // ── Step 7: L/T 분류 ─────────────────────────────────────────────
+      data = data.map(r => {
+        const fe = normStr(r['Full/Empty']).toUpperCase();
+        if (fe !== 'E') {
+          const dp = normStr(r['Discharge Port']);
+          r['L/T'] = KR_PORTS.includes(dp) ? dp : 'TS';
+        } else {
+          r['L/T'] = null;
+        }
+        return r;
+      });
+
+      // ── Step 9: 터미널 이름 매핑 ────────────────────────────────────
+      data = data.map(r => {
+        if (r['Loading Terminal']) r['Loading Terminal'] = mapTerminal(r['Loading Terminal']);
+        if (r['Discharging Terminal']) r['Discharging Terminal'] = mapTerminal(r['Discharging Terminal']);
+        return r;
+      });
+
+      // ── Step 10: 정렬 (Loading Terminal 기준, 빈 값 하순) ────────────
+      data.sort((a, b) => {
+        const ta = normStr(a['Loading Terminal']);
+        const tb = normStr(b['Loading Terminal']);
+        if (!ta && !tb) return 0;
+        if (!ta) return 1;
+        if (!tb) return -1;
+        return ta.localeCompare(tb);
+      });
+
+      // ── Step 11: 컬럼 이름 변경 & 비고 처리 ─────────────────────────
+      data = data.map(r => {
+        if ('Next POD' in r) { r['Stow Code'] = r['Next POD']; delete r['Next POD']; }
+        if ('Active' in r) { r['Remark'] = r['Active']; delete r['Active']; }
+        if (!('Remark' in r)) r['Remark'] = '';
+        r['Remark'] = normStr(r['Remark']).replace(/^nan$/i, '').replace(/^None$/i, '');
+
+        const imo = normStr(r['IMO Class']).replace(/^nan$/i, '').replace(/^None$/i, '');
+        r['IMO Class'] = imo;
+
+        // add_remarks
+        const reefer = r['Reefer Temp.'];
+        const hasReefer = reefer !== undefined && reefer !== '' && reefer !== null;
+        const isCriticalIMO = ['2', '2.1', '2.2'].includes(imo);
+        let remark = r['Remark'] || '';
+        if (isCriticalIMO || (imo && hasReefer)) {
+          if (!remark.includes('직반출 위험물')) remark = (remark + ' 직반출 위험물').trim();
+        }
+        const socVal = normStr(r['SOC']).toUpperCase();
+        if (socVal === 'Y') {
+          if (!remark.includes('SOC')) remark = (remark + ' SOC').trim();
+        }
+        r['Remark'] = remark;
+
+        // BL 컬럼 통일
+        r['BL No.<Booking No.>'] = extractBL(r);
+        return r;
+      });
+
+      return data;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 5. SUMMARY 생성 (app.py Step 8)
+    // ═══════════════════════════════════════════════════════════════════
+    function generateSummaries(data) {
+      const counts = {}; // { typeSize: { KRPUS, KRKAN, KRINC, TS, Empty, TOTAL } }
+      const socRows = [];
+      const dgRows = [];
+
+      data.forEach(r => {
+        const ts = normStr(r['Type/Size']);
+        const lt = r['L/T'];
+        const fe = normStr(r['Full/Empty']).toUpperCase();
+        const rem = normStr(r['Remark']);
+
+        if (!counts[ts]) counts[ts] = { KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, Empty: 0, TOTAL: 0, 'TYPE/SIZE': ts };
+
+        if (fe === 'E') {
+          counts[ts]['Empty']++;
+        } else {
+          if (lt && KR_PORTS.includes(lt)) counts[ts][lt]++;
+          else if (lt === 'TS') counts[ts]['TS']++;
+        }
+        counts[ts]['TOTAL']++;
+
+        if (rem.includes('SOC')) socRows.push(r);
+        if (rem.includes('직반출 위험물')) dgRows.push(r);
       });
 
       const summary = Object.values(counts);
-      const totalsRow = { 'TYPE/SIZE': 'Total', KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, TOTAL: 0 };
-      summary.forEach(s => {
-        ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'TOTAL'].forEach(k => totalsRow[k] += s[k]);
+      // 합계 행
+      const totals = { 'TYPE/SIZE': 'Total', KRPUS: 0, KRKAN: 0, KRINC: 0, TS: 0, Empty: 0, TOTAL: 0 };
+      summary.forEach(s => ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'Empty', 'TOTAL'].forEach(k => totals[k] += s[k]));
+      summary.push(totals);
+
+      // 컬럼 순서: KRPUS, KRKAN, KRINC, TS, Empty, TOTAL, TYPE/SIZE
+      const orderedSummary = summary.map(s => ({
+        'KRPUS': s.KRPUS, 'KRKAN': s.KRKAN, 'KRINC': s.KRINC,
+        'TS': s.TS, 'Empty': s.Empty, 'TOTAL': s.TOTAL, 'TYPE/SIZE': s['TYPE/SIZE']
+      }));
+
+      return { summary: orderedSummary, soc: socRows, dg: dgRows };
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 6. Excel 다운로드 (app.py Step 15)
+    // ═══════════════════════════════════════════════════════════════════
+    function buildOutputRows(data) {
+      return data.map(r => {
+        const out = {};
+        OUTPUT_COLUMNS.forEach(col => {
+          let v = r[col];
+          if (v === undefined || v === null || v === 'nan' || v === 'None') v = '';
+          out[col] = v;
+        });
+        return out;
       });
-      summary.push(totalsRow);
-
-      return { summary, soc, dg };
     }
 
-    function downloadExcel(data, filename) {
-      // Create Sheet
-      const ws = XLSX.utils.json_to_sheet(data);
-      // Styling logic
-      const range = XLSX.utils.decode_range(ws['!ref']);
-      for (let r = range.s.r + 1; r <= range.e.r; r++) {
-        const terminalIdx = 1; // 'Terminal' column index
-        const cellRef = XLSX.utils.encode_cell({ r: r, c: terminalIdx });
-        const cell = ws[cellRef];
-        if (cell && cell.v && COLORS[cell.v]) {
-          cell.s = {
-            fill: { fgColor: { rgb: COLORS[cell.v].substring(1) } },
-            font: { bold: true }
-          };
-        }
-        const weightIdx = 5; // Package Weight
-        const weightRef = XLSX.utils.encode_cell({ r: r, c: weightIdx });
-        if (ws[weightRef]) ws[weightRef].z = '0.0';
-      }
-
+    function downloadExcel(data, summaryData, socRows, dgRows, filename) {
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Merged");
 
-      // Use xlsx-js-style to write with styles
-      const wbout = XLSX_STYLE.write(wb, { bookType: 'xlsx', type: 'binary' });
-      function s2ab(s) {
-        const buf = new ArrayBuffer(s.length);
-        const view = new Uint8Array(buf);
-        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-        return buf;
+      // ── ITPS_DATA 시트 ────────────────────────────────────
+      const outputRows = buildOutputRows(data);
+      const ws_itps = XLSX.utils.json_to_sheet(outputRows, { header: OUTPUT_COLUMNS });
+
+      // 컬럼 너비 자동 조정
+      const colWidths = OUTPUT_COLUMNS.map(col => {
+        let maxLen = col.length;
+        outputRows.forEach(r => { const l = String(r[col] ?? '').length; if (l > maxLen) maxLen = l; });
+        return { wch: Math.min(maxLen + 2, 50) };
+      });
+      ws_itps['!cols'] = colWidths;
+
+      // 터미널 셀 배경색
+      const loadColIdx = OUTPUT_COLUMNS.indexOf('Loading Terminal');
+      const disColIdx = OUTPUT_COLUMNS.indexOf('Discharging Terminal');
+      const range = XLSX.utils.decode_range(ws_itps['!ref']);
+      for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        [loadColIdx, disColIdx].forEach(ci => {
+          if (ci < 0) return;
+          const cellRef = XLSX.utils.encode_cell({ r, c: ci });
+          const cell = ws_itps[cellRef];
+          if (cell && cell.v && TERMINAL_COLORS[cell.v]) {
+            cell.s = {
+              fill: { patternType: 'solid', fgColor: { rgb: TERMINAL_COLORS[cell.v] } },
+              font: { bold: true }
+            };
+          }
+        });
       }
-      const blob = new Blob([s2ab(wbout)], { type: "application/octet-stream" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+      XLSX.utils.book_append_sheet(wb, ws_itps, 'ITPS_DATA');
+
+      // ── SUMMARY 시트 ──────────────────────────────────────
+      const summaryHeader = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'Empty', 'TOTAL', 'TYPE/SIZE'];
+      const ws_sum = XLSX.utils.json_to_sheet(summaryData, { header: summaryHeader });
+      XLSX.utils.book_append_sheet(wb, ws_sum, 'SUMMARY');
+
+      // ── SOC 시트 ─────────────────────────────────────────
+      const socCols = ['BL No.<Booking No.>', 'Equipment Number', 'Origin Load Port', 'Discharge Port', 'Full/Empty', 'Type/Size'];
+      const socData = socRows.map(r => { const o = {}; socCols.forEach(c => o[c] = normStr(r[c])); return o; });
+      const ws_soc = XLSX.utils.json_to_sheet(socData, { header: socCols });
+      // 합계 행 추가
+      XLSX.utils.sheet_add_aoa(ws_soc, [['Total', '', '', '', '', socRows.length]], { origin: -1 });
+      XLSX.utils.book_append_sheet(wb, ws_soc, 'SOC');
+
+      // ── 직반출 위험물 시트 ──────────────────────────────────
+      const dgCols = ['BL No.<Booking No.>', 'Equipment Number', 'Full/Empty', 'Origin Load Port', 'Discharge Port', 'IMO Class', 'UN Number', 'Reefer Temp.'];
+      const dgData = dgRows.map(r => { const o = {}; dgCols.forEach(c => o[c] = normStr(r[c])); return o; });
+      const ws_dg = XLSX.utils.json_to_sheet(dgData, { header: dgCols });
+      XLSX.utils.sheet_add_aoa(ws_dg, [['Total', '', '', '', '', '', '', dgRows.length]], { origin: -1 });
+      XLSX.utils.book_append_sheet(wb, ws_dg, '직반출 위험물');
+
+      // ── 다운로드 ───────────────────────────────────────────
+      XLSX.writeFile(wb, filename);
     }
 
-    function renderSummary(res) {
+    // ═══════════════════════════════════════════════════════════════════
+    // 7. 메인 실행
+    // ═══════════════════════════════════════════════════════════════════
+    async function processFiles() {
+      const btn = document.getElementById('process-btn');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      btnText.textContent = '[데이터 처리중]';
+      showToast('success', '⏳ 브라우저 내 데이터 처리 중...');
+
+      try {
+        const opts = {
+          pnitVessel: document.getElementById('pnit-vessel').value.trim(),
+          pnitPod: document.getElementById('pnit-pod').value.trim(),
+          pncVessel: document.getElementById('pnc-vessel').value.trim(),
+          pncPod: document.getElementById('pnc-pod').value.trim(),
+        };
+
+        // 파일 읽기
+        const [tsteamWb, itpsWb] = await Promise.all([
+          readExcel(files.tsteam),
+          readExcel(files.itps),
+        ]);
+
+        // ITPS 파일: 'Data' 시트 우선, 없으면 첫 번째 시트
+        const itpsSheetName = itpsWb.SheetNames.includes('Data') ? 'Data' : itpsWb.SheetNames[0];
+        const itpsData = sheetToJson(itpsWb.Sheets[itpsSheetName]);
+
+        if (itpsData.length === 0) throw new Error('ITPS 파일에 데이터가 없습니다.');
+
+        // 처리
+        const merged = performProcessing(tsteamWb, itpsData, opts);
+        const { summary, soc, dg } = generateSummaries(merged);
+
+        // 파일명 생성 (최종파일 - XXX → XXX merged file.xlsx)
+        let baseName = files.tsteam.name.replace(/\.[^.]+$/, '');
+        baseName = baseName.replace(/^최종파일\s*-\s*/i, '').trim();
+        const filename = `${baseName} merged file.xlsx`;
+
+        // 다운로드
+        downloadExcel(merged, summary, soc, dg, filename);
+
+        // UI 렌더링
+        renderSummary({ summary, soc, dg });
+
+        showToast('success', `✅ 처리 완료! "${filename}" 다운로드가 시작됩니다.`);
+      } catch (err) {
+        console.error(err);
+        showToast('error', '❌ 오류: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        btnText.textContent = 'Merged 파일 생성';
+        checkReady();
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 8. UI 렌더링
+    // ═══════════════════════════════════════════════════════════════════
+    function renderSummary({ summary, soc, dg }) {
       const panel = document.getElementById('summary-panel');
       panel.innerHTML = '';
-      panel.appendChild(createCard('📊 SUMMARY 정보', res.summary, null, true));
-      panel.appendChild(createCard('⚠️ 직반출 위험물 목록', res.dg, res.dg.length));
-      panel.appendChild(createCard('👥 SOC 목록', res.soc, res.soc.length));
+      panel.appendChild(createCard('📊 SUMMARY 정보', summary, null, true));
+      panel.appendChild(createCard('⚠️ 직반출 위험물 목록', dg, dg.length));
+      panel.appendChild(createCard('👥 SOC 목록', soc, soc.length));
     }
 
-    function createCard(title, data, count = null, isSummary = false) {
+    function createCard(title, data, count, isSummary = false) {
       const card = document.createElement('div'); card.className = 'summary-card';
       const h2 = document.createElement('h2');
-      h2.innerHTML = `${title}${count !== null ? ` <span class="header-count">(${count}건)</span>` : ''}`;
+      h2.innerHTML = `${title}${count !== null && count !== undefined ? ` <span class="header-count">(${count}건)</span>` : ''}`;
       card.appendChild(h2);
-      if (!data || data.length === 0) { card.innerHTML += '<p class="empty-state">데이터가 없습니다.</p>'; return card; }
+
+      if (!data || data.length === 0) {
+        card.innerHTML += '<p class="empty-state">데이터가 없습니다.</p>';
+        return card;
+      }
+
+      let keys = [];
+      if (isSummary) {
+        keys = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'Empty', 'TOTAL', 'TYPE/SIZE'];
+      } else {
+        // 내부 필드(_,L/T,SOC 등) 제외
+        const excludeKeys = new Set(['L/T', 'SOC', '_terminal']);
+        keys = Object.keys(data[0]).filter(k => !k.startsWith('_') && !excludeKeys.has(k));
+      }
+
       const wrap = document.createElement('div'); wrap.className = 'table-container';
       const table = document.createElement('table');
-      const thead = document.createElement('thead'); const trHeader = document.createElement('tr');
 
-      let keys = Object.keys(data[0]).filter(k => !k.startsWith('_'));
-      if (isSummary) keys = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'TOTAL', 'TYPE/SIZE'];
-
-      keys.forEach(key => {
-        const th = document.createElement('th'); th.textContent = key;
+      // thead
+      const thead = document.createElement('thead');
+      const trH = document.createElement('tr');
+      keys.forEach(k => {
+        const th = document.createElement('th');
+        th.textContent = k;
         if (isSummary) {
-          if (key === 'KRPUS') th.className = 'col-krpus';
-          if (key === 'KRKAN') th.className = 'col-krkan';
-          if (key === 'KRINC') th.className = 'col-krinc';
+          if (k === 'KRPUS') th.className = 'col-krpus';
+          if (k === 'KRKAN') th.className = 'col-krkan';
+          if (k === 'KRINC') th.className = 'col-krinc';
         }
-        trHeader.appendChild(th);
+        trH.appendChild(th);
       });
-      thead.appendChild(trHeader); table.appendChild(thead);
+      thead.appendChild(trH); table.appendChild(thead);
+
+      // tbody
       const tbody = document.createElement('tbody');
       data.forEach(row => {
         const tr = document.createElement('tr');
-        if (Object.values(row).some(v => String(v).toLowerCase() === 'total')) tr.className = 'total-row';
-        keys.forEach(key => {
-          const val = row[key]; const td = document.createElement('td');
-          td.textContent = (val === null || val === undefined || val === 0) ? '' : val;
+        const isTotal = Object.values(row).some(v => String(v).toLowerCase() === 'total');
+        if (isTotal) tr.className = 'total-row';
+
+        keys.forEach(k => {
+          const td = document.createElement('td');
+          const val = row[k];
+          td.textContent = (val === null || val === undefined || val === '' || val === 0) ? (isSummary && k !== 'TYPE/SIZE' ? '0' : '') : val;
+
           if (isSummary) {
-            if (key === 'KRPUS') td.className = 'col-krpus';
-            if (key === 'KRKAN') td.className = 'col-krkan';
-            if (key === 'KRINC') td.className = 'col-krinc';
+            if (k === 'KRPUS') td.className = 'col-krpus';
+            if (k === 'KRKAN') td.className = 'col-krkan';
+            if (k === 'KRINC') td.className = 'col-krinc';
+          }
+          // 터미널 색상 (상세 목록)
+          if (!isSummary && k === 'Loading Terminal' && TERMINAL_COLORS[val]) {
+            td.style.background = `#${TERMINAL_COLORS[val]}`;
+            td.style.color = '#000';
+            td.style.fontWeight = '700';
           }
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
-      table.appendChild(tbody); wrap.appendChild(table); card.appendChild(wrap);
+      table.appendChild(tbody);
+      wrap.appendChild(table); card.appendChild(wrap);
       return card;
     }
 
-    function toast(type, msg) {
+    // ═══════════════════════════════════════════════════════════════════
+    // 9. Toast
+    // ═══════════════════════════════════════════════════════════════════
+    function showToast(type, msg) {
       const el = document.getElementById('toast');
-      el.className = 'toast show ' + type; el.textContent = msg;
-      setTimeout(() => { if (el.textContent === msg) el.classList.remove('show'); }, 5000);
+      el.className = 'toast show ' + type;
+      el.textContent = msg;
+      setTimeout(() => { if (el.textContent === msg) el.classList.remove('show'); }, 6000);
     }
   </script>
 </body>
