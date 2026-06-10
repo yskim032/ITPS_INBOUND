@@ -1044,11 +1044,15 @@
       const panel = document.getElementById('summary-panel');
       panel.innerHTML = '';
       panel.appendChild(createCard('📊 SUMMARY 정보', summary, null, true));
-      panel.appendChild(createCard('⚠️ 직반출 위험물 목록', dg, dg.length));
-      panel.appendChild(createCard('👥 SOC 목록', soc, soc.length));
+
+      const dgCols = ['BL No.<Booking No.>', 'Equipment Number', 'Full/Empty', 'Origin Load Port', 'Discharge Port', 'IMO Class', 'UN Number', 'Reefer Temp.'];
+      panel.appendChild(createCard('⚠️ 직반출 위험물 목록', dg, dg.length, false, dgCols));
+
+      const socCols = ['BL No.<Booking No.>', 'Equipment Number', 'Origin Load Port', 'Discharge Port', 'Full/Empty', 'Type/Size'];
+      panel.appendChild(createCard('👥 SOC 목록', soc, soc.length, false, socCols));
     }
 
-    function createCard(title, data, count, isSummary = false) {
+    function createCard(title, data, count, isSummary = false, specificKeys = null) {
       const card = document.createElement('div'); card.className = 'summary-card';
       const h2 = document.createElement('h2');
       h2.innerHTML = `${title}${count !== null && count !== undefined ? ` <span class="header-count">(${count}건)</span>` : ''}`;
@@ -1062,6 +1066,8 @@
       let keys = [];
       if (isSummary) {
         keys = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'Empty', 'TOTAL', 'TYPE/SIZE'];
+      } else if (specificKeys) {
+        keys = specificKeys;
       } else {
         // 내부 필드(_,L/T,SOC 등) 제외
         const excludeKeys = new Set(['L/T', 'SOC', '_terminal']);
