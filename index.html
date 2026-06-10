@@ -559,14 +559,41 @@
 
     .flow-path {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.1);
-      stroke-width: 2;
+      stroke: rgba(255, 255, 255, 0.4);
+      stroke-width: 2.5;
       stroke-linecap: round;
     }
 
-    .flow-dot {
-      fill: #fff;
-      filter: blur(2px) drop-shadow(0 0 5px var(--accent2));
+    .flow-path-anim {
+      fill: none;
+      stroke: var(--accent2);
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-dasharray: 4 12;
+      animation: dash-flow 2s linear infinite;
+      filter: drop-shadow(0 0 5px var(--accent2));
+    }
+
+    @keyframes dash-flow {
+      from {
+        stroke-dashoffset: 16;
+      }
+
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    .moving-light {
+      offset-path: var(--path);
+      animation: flow-move 3s infinite linear;
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      box-shadow: 0 0 15px #fff, 0 0 30px var(--accent2);
+      z-index: 5;
     }
 
     @keyframes flow-move {
@@ -577,17 +604,6 @@
       to {
         offset-distance: 100%;
       }
-    }
-
-    .moving-light {
-      offset-path: var(--path);
-      animation: flow-move 3s infinite linear;
-      width: 6px;
-      height: 6px;
-      background: #fff;
-      border-radius: 50%;
-      position: absolute;
-      box-shadow: 0 0 10px #fff, 0 0 20px var(--accent2);
     }
 
     /* terminal color badges */
@@ -698,12 +714,13 @@
       'BUSAN CONTAINER TERMINAL - BCT': 'BCT',
       'HANJIN BUSAN NEW PORT CO., LTD': 'HJNC',
       'HMM PSA NEW-PORT TERMINAL (HPNT)': 'HPNT',
-      'OLD PORT FEEDER TERMINAL': 'OLD PORT FEEDER TERMINAL',
+      'OLD PORT FEEDER TERMINAL': 'OLD TML',
     };
 
     const TERMINAL_COLORS = {
       'PNC': 'ADD8E6', 'PNIT': 'FFFFE0', 'DGT': 'E0FFE0',
       'BCT': 'FFE4E1', 'HJNC': 'F0E68C', 'HPNT': 'E6E6FA',
+      'OLD TML': 'C1E1C1',
     };
 
     const KR_PORTS = ['KRPUS', 'KRINC', 'KRKAN'];
@@ -1260,7 +1277,7 @@
               <div class="node-name">${d.load}</div>
             </div>
             <div class="dest-info">
-              <span class="dest-boxes">📦 ${d.boxes}</span>
+              <span class="dest-boxes">${d.boxes} containers</span>
               <span class="dest-teu">${d.teu} TEU</span>
             </div>
           `;
@@ -1285,14 +1302,20 @@
             const x2 = svgRect.width;
             const y2 = (destRect.top + destRect.height / 2) - svgRect.top;
 
-            // Bezier Path
+            // Bezier Path (Static background)
             const pathData = `M ${x1} ${y1} C ${x1 + (x2 - x1) / 2} ${y1}, ${x1 + (x2 - x1) / 2} ${y2}, ${x2} ${y2}`;
-            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-            path.setAttribute("d", pathData);
-            path.setAttribute("class", "flow-path");
-            svg.appendChild(path);
+            const pathBG = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathBG.setAttribute("d", pathData);
+            pathBG.setAttribute("class", "flow-path");
+            svg.appendChild(pathBG);
 
-            // Light Animation
+            // Bezier Path (Animated flow)
+            const pathAnim = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            pathAnim.setAttribute("d", pathData);
+            pathAnim.setAttribute("class", "flow-path-anim");
+            svg.appendChild(pathAnim);
+
+            // Moving Light (Glow dot)
             const light = document.createElement('div');
             light.className = 'moving-light';
             light.style.setProperty('--path', `path('${pathData}')`);
