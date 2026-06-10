@@ -469,120 +469,125 @@
       font-style: italic;
     }
 
-    /* Flow Visualization */
+    /* Flow Visualization - Grouped Tree Style */
     .flow-card {
       background: linear-gradient(145deg, rgba(30, 30, 30, 0.4), rgba(15, 15, 15, 0.6));
+      overflow: hidden;
     }
 
-    .flow-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-      margin-top: 20px;
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      padding: 20px 0;
     }
 
-    .flow-item {
+    .flow-group {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 15px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+      min-height: 200px;
     }
 
-    .flow-item:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.1);
+    .source-side {
+      flex: 0 0 120px;
+      display: flex;
+      justify-content: center;
+      z-index: 2;
     }
 
-    .flow-terminal {
+    .svg-side {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      min-width: 200px;
+    }
+
+    .destination-side {
+      flex: 0 0 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 2;
+    }
+
+    .flow-node {
+      width: 100px;
+      height: 50px;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 90px;
-      height: 60px;
-      border-radius: 8px;
       color: #000;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .ft-label {
-      font-size: 9px;
-      font-weight: 700;
-      opacity: 0.6;
+    .node-label {
+      font-size: 8px;
+      font-weight: 800;
+      opacity: 0.7;
       text-transform: uppercase;
-      margin-bottom: 2px;
     }
 
-    .ft-name {
-      font-size: 16px;
+    .node-name {
+      font-size: 14px;
       font-weight: 800;
     }
 
-    .flow-arrow {
-      flex: 1;
+    .dest-node-wrap {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      padding: 0 15px;
+      gap: 10px;
     }
 
-    .flow-stats {
+    .dest-info {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      margin-bottom: 6px;
+      font-size: 11px;
     }
 
-    .flow-boxes {
-      font-size: 14px;
+    .dest-boxes {
       font-weight: 700;
       color: var(--accent2);
     }
 
-    .flow-teu {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--muted);
+    .dest-teu {
+      opacity: 0.6;
     }
 
-    .arrow-line {
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, rgba(218, 54, 51, 0.5), rgba(35, 134, 54, 0.5));
-      position: relative;
-      border-radius: 1px;
+    .flow-path {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 2;
+      stroke-linecap: round;
     }
 
-    .arrow-head {
+    .flow-dot {
+      fill: #fff;
+      filter: blur(2px) drop-shadow(0 0 5px var(--accent2));
+    }
+
+    @keyframes flow-move {
+      from {
+        offset-distance: 0%;
+      }
+
+      to {
+        offset-distance: 100%;
+      }
+    }
+
+    .moving-light {
+      offset-path: var(--path);
+      animation: flow-move 3s infinite linear;
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
       position: absolute;
-      right: -2px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: rgba(35, 134, 54, 0.8);
-      animation: pulse-arrow 1.5s infinite;
-    }
-
-    @keyframes pulse-arrow {
-      0% {
-        transform: translate(0, -50%);
-        opacity: 0.5;
-      }
-
-      50% {
-        transform: translate(3px, -50%);
-        opacity: 1;
-      }
-
-      100% {
-        transform: translate(0, -50%);
-        opacity: 0.5;
-      }
+      box-shadow: 0 0 10px #fff, 0 0 20px var(--accent2);
     }
 
     /* terminal color badges */
@@ -1192,45 +1197,112 @@
       panel.appendChild(createCard('👥 SOC 목록', soc, soc.length, false, socCols));
     }
 
-    // 터미널 플로우 시각화 카드
+    // 터미널 플로우 시각화 카드 (A -> B,C,D,E 트리 스타일)
     function createFlowCard(flows) {
+      if (!flows || flows.length === 0) return document.createElement('div');
+
       const card = document.createElement('div');
       card.className = 'summary-card flow-card';
 
       const h2 = document.createElement('h2');
-      h2.innerHTML = '🔄 터미널간 컨테이너 이동 현황';
+      h2.innerHTML = '🔄 터미널간 컨테이너 이동 현황 (Divergent Flow)';
       card.appendChild(h2);
 
-      const grid = document.createElement('div');
-      grid.className = 'flow-grid';
-
+      // 데이터 그룹화 (Discharge 기준)
+      const groups = {};
       flows.forEach(f => {
-        const disColor = TERMINAL_COLORS[f.dis] || 'C8D6E8';
-        const loadColor = TERMINAL_COLORS[f.load] || 'C8E6C8';
-
-        const item = document.createElement('div');
-        item.className = 'flow-item';
-        item.innerHTML = `
-          <div class="flow-terminal dis-terminal" style="background:#${disColor};">
-            <div class="ft-label">DISCHARGE</div>
-            <div class="ft-name">${f.dis}</div>
-          </div>
-          <div class="flow-arrow">
-            <div class="flow-stats">
-              <span class="flow-boxes">📦 ${f.boxes}</span>
-              <span class="flow-teu">${f.teu} TEU</span>
-            </div>
-            <div class="arrow-line"><div class="arrow-head">▶</div></div>
-          </div>
-          <div class="flow-terminal load-terminal" style="background:#${loadColor};">
-            <div class="ft-label">LOAD</div>
-            <div class="ft-name">${f.load}</div>
-          </div>
-        `;
-        grid.appendChild(item);
+        if (!groups[f.dis]) groups[f.dis] = [];
+        groups[f.dis].push(f);
       });
 
-      card.appendChild(grid);
+      const container = document.createElement('div');
+      container.className = 'flow-container';
+
+      Object.entries(groups).forEach(([dis, dests]) => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'flow-group';
+
+        // 1. Source (Left)
+        const sourceSide = document.createElement('div');
+        sourceSide.className = 'source-side';
+        const disColor = TERMINAL_COLORS[dis] || 'C8D6E8';
+        sourceSide.innerHTML = `
+          <div class="flow-node" style="background:#${disColor};">
+            <div class="node-label">DISCHARGE</div>
+            <div class="node-name">${dis}</div>
+          </div>
+        `;
+        groupEl.appendChild(sourceSide);
+
+        // 2. SVG Area (Center)
+        const svgSide = document.createElement('div');
+        svgSide.className = 'svg-side';
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("width", "100%");
+        svg.setAttribute("height", "100%");
+        svg.style.position = "absolute";
+        svg.style.left = "0";
+        svg.style.top = "0";
+        svg.setAttribute("overflow", "visible");
+        svgSide.appendChild(svg);
+        groupEl.appendChild(svgSide);
+
+        // 3. Destination (Right)
+        const destSide = document.createElement('div');
+        destSide.className = 'destination-side';
+        dests.forEach(d => {
+          const loadColor = TERMINAL_COLORS[d.load] || 'C8E6C8';
+          const dWrap = document.createElement('div');
+          dWrap.className = 'dest-node-wrap';
+          dWrap.innerHTML = `
+            <div class="flow-node" style="background:#${loadColor};">
+              <div class="node-label">LOAD</div>
+              <div class="node-name">${d.load}</div>
+            </div>
+            <div class="dest-info">
+              <span class="dest-boxes">📦 ${d.boxes}</span>
+              <span class="dest-teu">${d.teu} TEU</span>
+            </div>
+          `;
+          destSide.appendChild(dWrap);
+        });
+        groupEl.appendChild(destSide);
+        container.appendChild(groupEl);
+
+        // Wait for rendering to calculate positions and draw paths
+        setTimeout(() => {
+          const disNode = sourceSide.querySelector('.flow-node');
+          const disRect = disNode.getBoundingClientRect();
+          const svgRect = svg.getBoundingClientRect();
+
+          const x1 = 0; // Relative to SVG left
+          const y1 = (disRect.top + disRect.height / 2) - svgRect.top;
+
+          destSide.querySelectorAll('.dest-node-wrap').forEach((dWrap, i) => {
+            const destNode = dWrap.querySelector('.flow-node');
+            const destRect = destNode.getBoundingClientRect();
+
+            const x2 = svgRect.width;
+            const y2 = (destRect.top + destRect.height / 2) - svgRect.top;
+
+            // Bezier Path
+            const pathData = `M ${x1} ${y1} C ${x1 + (x2 - x1) / 2} ${y1}, ${x1 + (x2 - x1) / 2} ${y2}, ${x2} ${y2}`;
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            path.setAttribute("class", "flow-path");
+            svg.appendChild(path);
+
+            // Light Animation
+            const light = document.createElement('div');
+            light.className = 'moving-light';
+            light.style.setProperty('--path', `path('${pathData}')`);
+            light.style.animationDelay = `${i * 0.5}s`;
+            svgSide.appendChild(light);
+          });
+        }, 100);
+      });
+
+      card.appendChild(container);
       return card;
     }
 
