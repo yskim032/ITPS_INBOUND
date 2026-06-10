@@ -747,6 +747,12 @@
       color: var(--accent2);
       font-weight: 700;
     }
+
+    .statics-total {
+      color: var(--yellow);
+      font-weight: 800;
+      margin-left: 6px;
+    }
   </style>
 </head>
 
@@ -767,7 +773,7 @@
   <div id="statics-modal" class="modal-overlay" onclick="closeStatics(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <h2>📈 작업 통계 내역 (Firebase)</h2>
+        <h2>📈 작업 통계 내역 (Firebase) <span id="statics-total-count" class="statics-total"></span></h2>
         <button class="close-modal" onclick="closeStatics()">✕</button>
       </div>
       <div class="modal-body">
@@ -1591,10 +1597,12 @@
       const loading = document.getElementById('statics-loading');
       const list = document.getElementById('statics-list');
       const tbody = document.getElementById('history-tbody');
+      const totalCountEl = document.getElementById('statics-total-count');
 
       loading.style.display = 'block';
       list.style.display = 'none';
       tbody.innerHTML = '';
+      totalCountEl.textContent = '';
 
       if (!db) {
         loading.textContent = "❌ Firebase 설정이 완료되지 않았습니다. (Firebase Config를 입력해주세요)";
@@ -1607,6 +1615,8 @@
           loading.textContent = "기록된 데이터가 없습니다.";
           return;
         }
+
+        totalCountEl.textContent = `(${snapshot.size})`;
 
         snapshot.forEach(doc => {
           const d = doc.data();
