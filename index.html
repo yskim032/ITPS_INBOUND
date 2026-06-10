@@ -100,10 +100,10 @@
     }
 
     .left-panel {
-      flex: 1;
+      flex: 0.8;
       padding-right: 40px;
       min-width: 0;
-      max-width: 650px;
+      max-width: 520px;
     }
 
     .neon-divider {
@@ -1102,7 +1102,9 @@
         keys.forEach(k => {
           const td = document.createElement('td');
           const val = row[k];
-          td.textContent = (val === null || val === undefined || val === '' || val === 0) ? (isSummary && k !== 'TYPE/SIZE' ? '0' : '') : val;
+          // 요약 정보(isSummary)에서 0은 빈칸으로 표시하여 가독성 향상
+          const isZero = (val === 0 || val === '0');
+          td.textContent = (val === null || val === undefined || val === '' || (isSummary && isZero)) ? '' : val;
 
           if (isSummary) {
             if (k === 'KRPUS') td.className = 'col-krpus';
