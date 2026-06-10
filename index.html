@@ -8,8 +8,8 @@
   <meta name="description"
     content="ITPS Inbound 파일을 브라우저에서 변환하는 서버리스 툴. 최종파일과 ITPS 파일을 업로드하면 Merged Excel 파일이 즉시 생성됩니다." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- SheetJS (parse & write) -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS with style support -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <style>
     *,
     *::before,
@@ -889,6 +889,22 @@
       });
     }
 
+    // 헤더 행 스타일(회색 배경 + 볼드)
+    function applyHeaderStyle(ws) {
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r: 0, c: c });
+        const cell = ws[cellRef];
+        if (cell) {
+          cell.s = {
+            fill: { patternType: 'solid', fgColor: { rgb: 'DDDDDD' } },
+            font: { bold: true },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        }
+      }
+    }
+
     function downloadExcel(data, summaryData, socRows, dgRows, filename) {
       const wb = XLSX.utils.book_new();
 
@@ -904,7 +920,10 @@
       });
       ws_itps['!cols'] = colWidths;
 
-      // 터미널 셀 배경색
+      // 헤더 스타일 적용
+      applyHeaderStyle(ws_itps);
+
+      // 터미널 셀 배경색 (Loading Terminal / Discharging Terminal)
       const loadColIdx = OUTPUT_COLUMNS.indexOf('Loading Terminal');
       const disColIdx = OUTPUT_COLUMNS.indexOf('Discharging Terminal');
       const range = XLSX.utils.decode_range(ws_itps['!ref']);
@@ -916,7 +935,8 @@
           if (cell && cell.v && TERMINAL_COLORS[cell.v]) {
             cell.s = {
               fill: { patternType: 'solid', fgColor: { rgb: TERMINAL_COLORS[cell.v] } },
-              font: { bold: true }
+              font: { bold: true },
+              alignment: { horizontal: 'center' }
             };
           }
         });
@@ -926,13 +946,14 @@
       // ── SUMMARY 시트 ──────────────────────────────────────
       const summaryHeader = ['KRPUS', 'KRKAN', 'KRINC', 'TS', 'Empty', 'TOTAL', 'TYPE/SIZE'];
       const ws_sum = XLSX.utils.json_to_sheet(summaryData, { header: summaryHeader });
+      applyHeaderStyle(ws_sum);
       XLSX.utils.book_append_sheet(wb, ws_sum, 'SUMMARY');
 
       // ── SOC 시트 ─────────────────────────────────────────
       const socCols = ['BL No.<Booking No.>', 'Equipment Number', 'Origin Load Port', 'Discharge Port', 'Full/Empty', 'Type/Size'];
       const socData = socRows.map(r => { const o = {}; socCols.forEach(c => o[c] = normStr(r[c])); return o; });
       const ws_soc = XLSX.utils.json_to_sheet(socData, { header: socCols });
-      // 합계 행 추가
+      applyHeaderStyle(ws_soc);
       XLSX.utils.sheet_add_aoa(ws_soc, [['Total', '', '', '', '', socRows.length]], { origin: -1 });
       XLSX.utils.book_append_sheet(wb, ws_soc, 'SOC');
 
@@ -940,6 +961,7 @@
       const dgCols = ['BL No.<Booking No.>', 'Equipment Number', 'Full/Empty', 'Origin Load Port', 'Discharge Port', 'IMO Class', 'UN Number', 'Reefer Temp.'];
       const dgData = dgRows.map(r => { const o = {}; dgCols.forEach(c => o[c] = normStr(r[c])); return o; });
       const ws_dg = XLSX.utils.json_to_sheet(dgData, { header: dgCols });
+      applyHeaderStyle(ws_dg);
       XLSX.utils.sheet_add_aoa(ws_dg, [['Total', '', '', '', '', '', '', dgRows.length]], { origin: -1 });
       XLSX.utils.book_append_sheet(wb, ws_dg, '직반출 위험물');
 
