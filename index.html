@@ -283,62 +283,18 @@
       display: none;
     }
 
-    /* ── TS Option Panel ── */
-    .ts-options {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 24px;
-      display: none;
-    }
-
-    .ts-options.visible {
-      display: block;
-    }
-
-    .ts-options h3 {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: 16px;
-    }
-
-    .ts-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .ts-row label {
-      font-size: 12px;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .ts-row input {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
+    .clear-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(218, 54, 51, .25);
+      color: #f85149;
+      border: 1px solid rgba(218, 54, 51, .4);
       border-radius: 6px;
-      padding: 8px 10px;
-      color: var(--text);
-      font-size: 13px;
-      transition: border-color .2s;
-    }
-
-    .ts-row input:focus {
-      outline: none;
-      border-color: var(--accent2);
-    }
-
-    .ts-row input::placeholder {
-      color: var(--muted);
-      opacity: .6;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      z-index: 20;
     }
 
     .process-btn {
@@ -590,30 +546,7 @@
         </div>
       </div>
 
-      <!-- TS 선박 옵션 (TSTEAM 파일 로드 후 표시) -->
-      <div class="ts-options" id="ts-options">
-        <h3>🚢 TS 선박 정보 (선택사항)</h3>
-        <div class="ts-row">
-          <div>
-            <label for="pnit-vessel">PNIT 선박/항차</label>
-            <input type="text" id="pnit-vessel" placeholder="예: EVER GIVEN 123E" />
-          </div>
-          <div>
-            <label for="pnit-pod">PNIT Next POD</label>
-            <input type="text" id="pnit-pod" placeholder="예: SGSIN" />
-          </div>
-        </div>
-        <div class="ts-row">
-          <div>
-            <label for="pnc-vessel">PNC 선박/항차</label>
-            <input type="text" id="pnc-vessel" placeholder="예: MSC OSCAR 456W" />
-          </div>
-          <div>
-            <label for="pnc-pod">PNC Next POD</label>
-            <input type="text" id="pnc-pod" placeholder="예: SGSIN" />
-          </div>
-        </div>
-      </div>
+
 
       <div class="action-bar">
         <button class="process-btn" id="process-btn" onclick="processFiles()" disabled>
@@ -714,7 +647,6 @@
       zone.classList.add('loaded');
       nameEl.textContent = '✓ ' + file.name;
       nameEl.style.display = 'block';
-      if (type === 'tsteam') document.getElementById('ts-options').classList.add('visible');
       checkReady();
     }
 
@@ -725,7 +657,6 @@
       const nameEl = document.getElementById(`name-${type}`);
       nameEl.textContent = '';
       nameEl.style.display = 'none';
-      if (type === 'tsteam') document.getElementById('ts-options').classList.remove('visible');
       checkReady();
     }
 
@@ -804,8 +735,7 @@
     // ═══════════════════════════════════════════════════════════════════
     // 4. 메인 처리 로직 (app.py 1:1 포팅)
     // ═══════════════════════════════════════════════════════════════════
-    function performProcessing(tsteamWb, itpsData, opts) {
-      const { pnitVessel, pnitPod, pncVessel, pncPod } = opts;
+    function performProcessing(tsteamWb, itpsData) {
 
       // ── Step 3: TSTEAM 파싱 → ts_map (Cntr No. 기준) ─────────────────
       const tsMap = {}; // { cntrNo: { POR, POL, POD, FPOD, REMARK } }
@@ -875,24 +805,7 @@
         return r;
       });
 
-      // ── Step 6: Discharge Port – TS 분기 ────────────────────────────
-      data = data.map(r => {
-        const dp = normStr(r['Discharge Port']);
-        if (dp && !dp.startsWith('KR')) {
-          if (pnitVessel) {
-            r['Loading Terminal'] = 'PNIT';
-            r['Loaded Vessel/Voyage'] = pnitVessel;
-            r['Next POD'] = pnitPod;
-            r['Discharge Port'] = pnitPod;
-          } else if (pncVessel) {
-            r['Loading Terminal'] = 'PNC';
-            r['Loaded Vessel/Voyage'] = pncVessel;
-            r['Next POD'] = pncPod;
-            r['Discharge Port'] = pncPod;
-          }
-        }
-        return r;
-      });
+
 
       // ── Step 7: L/T 분류 ─────────────────────────────────────────────
       data = data.map(r => {
@@ -1085,13 +998,6 @@
       showToast('success', '⏳ 브라우저 내 데이터 처리 중...');
 
       try {
-        const opts = {
-          pnitVessel: document.getElementById('pnit-vessel').value.trim(),
-          pnitPod: document.getElementById('pnit-pod').value.trim(),
-          pncVessel: document.getElementById('pnc-vessel').value.trim(),
-          pncPod: document.getElementById('pnc-pod').value.trim(),
-        };
-
         // 파일 읽기
         const [tsteamWb, itpsWb] = await Promise.all([
           readExcel(files.tsteam),
@@ -1105,7 +1011,7 @@
         if (itpsData.length === 0) throw new Error('ITPS 파일에 데이터가 없습니다.');
 
         // 처리
-        const merged = performProcessing(tsteamWb, itpsData, opts);
+        const merged = performProcessing(tsteamWb, itpsData);
         const { summary, soc, dg } = generateSummaries(merged);
 
         // 파일명 생성 (최종파일 - XXX → XXX merged file.xlsx)
