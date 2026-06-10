@@ -855,24 +855,28 @@
       'OLD TML': 'C1E1C1',
     };
 
-    // Firebase Configuration (Please replace with your actual config)
+    // Firebase Configuration
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
+      apiKey: "AIzaSyAAc4B_d2GBRmh1bwb410B0SZeWedNrs-4",
       authDomain: "itps-inbound.firebaseapp.com",
       projectId: "itps-inbound",
-      storageBucket: "itps-inbound.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      storageBucket: "itps-inbound.firebasestorage.app",
+      messagingSenderId: "980521501405",
+      appId: "1:980521501405:web:d1c77dcd6d605b5bd81134",
+      measurementId: "G-5131HSNZ7T"
     };
 
     // Initialize Firebase
     let db = null;
     try {
-      if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      if (typeof firebase.analytics === 'function') {
+        firebase.analytics();
       }
-    } catch (e) { console.error("Firebase init failed:", e); }
+    } catch (e) {
+      console.error("Firebase init failed:", e);
+    }
 
     const KR_PORTS = ['KRPUS', 'KRINC', 'KRKAN'];
 
