@@ -484,7 +484,8 @@
 
     .flow-group {
       display: flex;
-      align-items: center;
+      align-items: stretch;
+      /* 변경: 자식 요소들이 높이를 꽉 채우도록 */
       position: relative;
       min-height: 200px;
     }
@@ -498,9 +499,9 @@
 
     .svg-side {
       flex: 1;
-      height: 100%;
       position: relative;
       min-width: 200px;
+      margin: 0 10px;
     }
 
     .destination-side {
@@ -559,19 +560,22 @@
 
     .flow-path {
       fill: none;
-      stroke: rgba(255, 255, 255, 0.4);
-      stroke-width: 2.5;
+      stroke: rgba(255, 255, 255, 0.6);
+      /* 불투명도 증가 */
+      stroke-width: 3;
+      /* 두께 약간 증가 */
       stroke-linecap: round;
     }
 
     .flow-path-anim {
       fill: none;
-      stroke: var(--accent2);
-      stroke-width: 2.5;
+      stroke: #00bbff;
+      /* 더 뚜렷한 파란색 */
+      stroke-width: 3;
       stroke-linecap: round;
-      stroke-dasharray: 4 12;
-      animation: dash-flow 2s linear infinite;
-      filter: drop-shadow(0 0 5px var(--accent2));
+      stroke-dasharray: 5 15;
+      animation: dash-flow 1.5s linear infinite;
+      filter: drop-shadow(0 0 8px #00bbff);
     }
 
     @keyframes dash-flow {
@@ -1290,9 +1294,13 @@
         setTimeout(() => {
           const disNode = sourceSide.querySelector('.flow-node');
           const disRect = disNode.getBoundingClientRect();
-          const svgRect = svg.getBoundingClientRect();
+          const svgRect = svgSide.getBoundingClientRect();
 
-          const x1 = 0; // Relative to SVG left
+          // SVG 자체 크기 명시적 지정
+          svg.style.width = svgRect.width + 'px';
+          svg.style.height = svgRect.height + 'px';
+
+          const x1 = 0;
           const y1 = (disRect.top + disRect.height / 2) - svgRect.top;
 
           destSide.querySelectorAll('.dest-node-wrap').forEach((dWrap, i) => {
