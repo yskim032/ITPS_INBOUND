@@ -10,6 +10,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <!-- SheetJS with style support -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <style>
     *,
     *::before,
@@ -646,6 +649,104 @@
       color: #000;
       font-weight: 700;
     }
+
+    /* Statics Modal Styles */
+    .statics-btn {
+      margin-left: auto;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .statics-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent2);
+      box-shadow: 0 0 10px rgba(31, 111, 235, 0.3);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--surface2);
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      font-size: 18px;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .history-table th {
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .history-vessel {
+      color: var(--accent2);
+      font-weight: 700;
+    }
   </style>
 </head>
 
@@ -657,7 +758,34 @@
           v2.0)</span></h1>
       <p class="copyright">The End – YS KIM holds the copyright @ 2026</p>
     </div>
+    <button class="statics-btn" onclick="openStatics()">
+      📈 Statics
+    </button>
   </header>
+
+  <!-- Statics Modal -->
+  <div id="statics-modal" class="modal-overlay" onclick="closeStatics(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h2>📈 작업 통계 내역 (Firebase)</h2>
+        <button class="close-modal" onclick="closeStatics()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="statics-loading" style="text-align:center; padding: 20px;">데이터를 불러오는 중...</div>
+        <div id="statics-list" style="display:none;">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>수행 날짜</th>
+                <th>Discharge Vessel/Voyage</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <main>
     <div class="left-panel">
@@ -726,6 +854,25 @@
       'BCT': 'FFE4E1', 'HJNC': 'F0E68C', 'HPNT': 'E6E6FA',
       'OLD TML': 'C1E1C1',
     };
+
+    // Firebase Configuration (Please replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "itps-inbound.firebaseapp.com",
+      projectId: "itps-inbound",
+      storageBucket: "itps-inbound.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    let db = null;
+    try {
+      if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+      }
+    } catch (e) { console.error("Firebase init failed:", e); }
 
     const KR_PORTS = ['KRPUS', 'KRINC', 'KRKAN'];
 
@@ -1185,6 +1332,9 @@
         // UI 렌더링
         renderSummary({ summary, soc, dg, flows: buildFlows(merged) });
 
+        // Firebase에 작업 내역 저장 (Vessel/Voyage 정보 추출)
+        saveWorkHistory(merged);
+
         showToast('success', `✅ 처리 완료! "${filename}" 다운로드가 시작됩니다.`);
       } catch (err) {
         console.error(err);
@@ -1412,7 +1562,72 @@
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // 9. Toast
+    // 9. Firebase & Statics Logic
+    // ═══════════════════════════════════════════════════════════════════
+    async function saveWorkHistory(data) {
+      if (!db) return;
+      try {
+        // 첫 번째 행에서 본선 정보 추출
+        const firstRow = data.find(r => r['Discharge Vessel/Voyage']);
+        const vessel = firstRow ? firstRow['Discharge Vessel/Voyage'] : 'Unknown Vessel';
+
+        await db.collection('history').add({
+          vessel: vessel,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          dateStr: new Date().toLocaleString()
+        });
+        console.log("History saved to Firebase");
+      } catch (e) { console.error("Failed to save history:", e); }
+    }
+
+    async function openStatics() {
+      const modal = document.getElementById('statics-modal');
+      modal.style.display = 'flex';
+
+      const loading = document.getElementById('statics-loading');
+      const list = document.getElementById('statics-list');
+      const tbody = document.getElementById('history-tbody');
+
+      loading.style.display = 'block';
+      list.style.display = 'none';
+      tbody.innerHTML = '';
+
+      if (!db) {
+        loading.textContent = "❌ Firebase 설정이 완료되지 않았습니다. (Firebase Config를 입력해주세요)";
+        return;
+      }
+
+      try {
+        const snapshot = await db.collection('history').orderBy('timestamp', 'desc').limit(50).get();
+        if (snapshot.empty) {
+          loading.textContent = "기록된 데이터가 없습니다.";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${d.dateStr || 'Unknown Date'}</td>
+            <td class="history-vessel">${d.vessel || 'N/A'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        loading.style.display = 'none';
+        list.style.display = 'block';
+      } catch (e) {
+        console.error(e);
+        loading.textContent = "❌ 데이터를 가져오지 못했습니다: " + e.message;
+      }
+    }
+
+    function closeStatics(e) {
+      document.getElementById('statics-modal').style.display = 'none';
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 10. Toast
     // ═══════════════════════════════════════════════════════════════════
     function showToast(type, msg) {
       const el = document.getElementById('toast');
